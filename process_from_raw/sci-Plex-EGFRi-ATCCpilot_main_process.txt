@@ -1,0 +1,447 @@
+# To follow this pipeline, edit environment/directory specifics, copy and paste the commands onto command line
+# begin a session with 50gb memory
+# srun --pty --time=08:00:00 --mem=50gb
+
+# Define working directory where outputs and logs will be stored
+WORKING_DIR=
+
+# Define hash barcodes file and add to working directory (different for each experiment)
+HASH_BARCODES_FILE=$WORKING_DIR/hashSampleSheet.txt
+
+# Refer to scripts + references directory 
+SCRIPTS_DIR=sci-RNA-seq/scripts
+REF_DIR=sci-RNA-seq/reference
+
+
+# STAR_INDEX is the path to the STAR genome index you want to align reads with.
+# Create star indices for for the human genome 
+
+# Used for the mapping of transcripts
+# STAR_INDEX=$REF_DIR/human/
+
+# GENE_MODEL_DIR is a directory with BED files for various genomic features
+# that are used to assign aligned reads to genes.
+
+# Used as the gene model 
+GENE_MODEL_DIR=$REF_DIR/gene_model/human
+
+# Barcode file
+LIG_BARCODES_FILE=$REF_DIR/ligation_384_3lvl
+RT_BARCODES_FILE=$REF_DIR/RT_384_3lvl
+
+# Download GNU Datamash
+# https://www.gnu.org/software/datamash/
+DATAMASH_PATH=
+
+# Change input path to bin where commands are found
+# as in the original sci-plex demultiplexing pipeline:
+# need to download packages for cutadapt, trimgalore, samtools, bedtools
+BIN=<path_to_bin>
+
+# Change this value to the number of batches to run at one time
+BATCH_SIZE=10
+
+# Give experiment desired name
+SAMPLE_NAME="sciPlex"
+echo "$SAMPLE_NAME" > $WORKING_DIR/combinatorial.indexing.key
+
+### Creates directory to put slurm batch job logs
+mkdir $WORKING_DIR/batch-logs
+mkdir $WORKING_DIR/batch-logs/1-R1-info-R2-logs
+mkdir $WORKING_DIR/batch-logs/2-trim-logs
+mkdir $WORKING_DIR/batch-logs/3-STAR-logs
+mkdir $WORKING_DIR/batch-logs/4-sam-sort-logs
+mkdir $WORKING_DIR/batch-logs/5-count-rRNA-logs
+mkdir $WORKING_DIR/batch-logs/6-make-bed-logs
+mkdir $WORKING_DIR/batch-logs/7-assign-reads-logs
+mkdir $WORKING_DIR/batch-logs/8-UMI-per-sample-logs
+mkdir $WORKING_DIR/batch-logs/9-UMI-rollup-logs
+
+
+#-------------------------------------------------------------------------------
+# Put read 1 info (RT well, UMI) into read 2 read name
+# 3 Level sci-RNA Seq Specific Chunk of code
+#-------------------------------------------------------------------------------
+
+cd $WORKING_DIR
+ 
+mkdir 2-combined-fastq
+mkdir 2-combined-fastq/file-lists-for-r1-info-munging
+ 
+# list fastq files in batches
+ls <path to R1 fastq files> | grep _R1_ | grep -v Undetermined | split -l $BATCH_SIZE -d - 2-combined-fastq/file-lists-for-r1-info-munging/
+   
+ls 2-combined-fastq/file-lists-for-r1-info-munging | while read BATCH; do
+   sbatch $SCRIPTS_DIR/2-put-read1-info-in-read2_3Level.sh \
+       $WORKING_DIR/1-output-fastq-3runs/     # location of fastq files          \
+       $WORKING_DIR/2-combined-fastq/file-lists-for-r1-info-munging/$BATCH      \
+       $SCRIPTS_DIR/                                           \
+       $RT_BARCODES_FILE                                       \
+       $LIG_BARCODES_FILE                                      \
+       $WORKING_DIR/combinatorial.indexing.key                 \
+       $WORKING_DIR/2-combined-fastq                            
+ done
+
+
+#-------------------------------------------------------------------------------
+# Trim poly-A tails 
+#-------------------------------------------------------------------------------
+
+cd $WORKING_DIR
+
+mkdir $WORKING_DIR/3-trimmed-fastq
+mkdir $WORKING_DIR/3-trimmed-fastq/file-lists-for-trimming
+
+ls 2-combined-fastq | grep -v file-lists | split -l $BATCH_SIZE -d - 3-trimmed-fastq/file-lists-for-trimming/
+
+
+ls 3-trimmed-fastq/file-lists-for-trimming | while read BATCH; do
+    sbatch $SCRIPTS_DIR/3-trim-STAR.sh     \
+        $WORKING_DIR/2-combined-fastq                        \
+        $WORKING_DIR/3-trimmed-fastq/file-lists-for-trimming/$BATCH         \
+        $WORKING_DIR/3-trimmed-fastq \
+        $BIN
+done
+
+
+#-------------------------------------------------------------------------------
+# Run STAR alignment
+#-------------------------------------------------------------------------------
+
+cd $WORKING_DIR
+
+mkdir 4-aligned-reads
+
+sbatch $SCRIPTS_DIR/4-STAR-alignReads.sh \
+    $WORKING_DIR/3-trimmed-fastq         \
+    $STAR_INDEX                          \
+    $WORKING_DIR/4-aligned-reads
+
+
+#-------------------------------------------------------------------------------
+# Filter ambiguously-mapped reads and sort BAM files
+# Also count rRNA reads
+#-------------------------------------------------------------------------------
+
+cd $WORKING_DIR
+
+mkdir 5-aligned-reads-filtered-sorted
+mkdir 5-aligned-reads-filtered-sorted/file-lists-for-samtools-sort
+
+ls 4-aligned-reads/ | grep "[.]Aligned[.]out[.]bam$" | split -l $BATCH_SIZE -d - 5-aligned-reads-filtered-sorted/file-lists-for-samtools-sort/
+
+ls 5-aligned-reads-filtered-sorted/file-lists-for-samtools-sort | while read BATCH; do
+    sbatch $SCRIPTS_DIR/5-samtools-filter-sort.sh    \
+        $WORKING_DIR/4-aligned-reads                              \
+        $WORKING_DIR/5-aligned-reads-filtered-sorted/file-lists-for-samtools-sort/$BATCH   \
+        $WORKING_DIR/5-aligned-reads-filtered-sorted       \
+        $BIN
+done
+
+#
+# You can run these jobs in parallel to the samtools-filter-sort.sh jobs
+#
+
+mkdir 6-rRNA-read-counts
+
+ls 5-aligned-reads-filtered-sorted/file-lists-for-samtools-sort/ | while read BATCH; do
+    sbatch $SCRIPTS_DIR/6-count-rRNA-reads.sh        \
+        $WORKING_DIR/4-aligned-reads                              \
+        $WORKING_DIR/5-aligned-reads-filtered-sorted/file-lists-for-samtools-sort/$BATCH        \
+        $GENE_MODEL_DIR/latest.rRNA.gene.regions.union.bed      \
+        $WORKING_DIR/6-rRNA-read-counts         \
+        $BIN
+done
+
+#-------------------------------------------------------------------------------
+# Split reads in BAM files into BED intervals
+#-------------------------------------------------------------------------------
+
+cd $WORKING_DIR
+
+mkdir 7-aligned-reads-rmdup-split-bed
+mkdir 7-aligned-reads-rmdup-split-bed/file-lists-for-rmdup
+
+ls 5-aligned-reads-filtered-sorted/ | grep "[.]bam$" | split -l $BATCH_SIZE -d - 7-aligned-reads-rmdup-split-bed/file-lists-for-rmdup/
+
+ls 7-aligned-reads-rmdup-split-bed/file-lists-for-rmdup | while read BATCH; do
+    sbatch $SCRIPTS_DIR/7-rmdup-and-make-split-bed.sh    \
+        $WORKING_DIR/5-aligned-reads-filtered-sorted                  \
+        $WORKING_DIR/7-aligned-reads-rmdup-split-bed/file-lists-for-rmdup/$BATCH                    \
+        $SCRIPTS_DIR/                                               \
+        $WORKING_DIR/7-aligned-reads-rmdup-split-bed      \
+        $BIN
+done
+
+#-------------------------------------------------------------------------------
+# Assign reads to genes, using the BED files as input
+#-------------------------------------------------------------------------------
+
+mkdir $WORKING_DIR/7-aligned-reads-rmdup-split-bed-gencode
+FILE_LIST=$(ls $WORKING_DIR/7-aligned-reads-rmdup-split-bed/ | grep -v file-lists)
+FILE=($FILE_LIST)
+
+# loop only necessary if chromosomes are not in "chr1" format
+for i in "${FILE[@]}"
+ do
+  awk 'OFS="\t" {$1="chr"$1; print}' $WORKING_DIR/7-aligned-reads-rmdup-split-bed/$i \
+       > $WORKING_DIR/7-aligned-reads-rmdup-split-bed-gencode/$i
+  echo "Processed $i" 
+ done
+
+cd $WORKING_DIR
+
+mkdir 8-unique-read-to-gene-assignments
+mkdir 8-unique-read-to-gene-assignments/file-lists-for-assign-reads-to-genes
+
+ls 7-aligned-reads-rmdup-split-bed/ | grep "[.]bed$" | split -l $BATCH_SIZE -d - 8-unique-read-to-gene-assignments/file-lists-for-assign-reads-to-genes/
+
+ls 8-unique-read-to-gene-assignments/file-lists-for-assign-reads-to-genes | while read BATCH; do
+    sbatch $SCRIPTS_DIR/8-assign-reads-to-genes.sh       \
+        $WORKING_DIR/7-aligned-reads-rmdup-split-bed-gencode                  \
+        $WORKING_DIR/8-unique-read-to-gene-assignments/file-lists-for-assign-reads-to-genes/$BATCH    \
+        $GENE_MODEL_DIR/latest.exons.bed                            \
+        $GENE_MODEL_DIR/latest.genes.bed                            \
+        $SCRIPTS_DIR/                                               \
+        $WORKING_DIR/8-unique-read-to-gene-assignments              \
+        $BIN                                                        \
+        $DATAMASH_PATH
+done
+
+
+#-------------------------------------------------------------------------------
+# Compute the duplication rate and proportion of reads that are from rRNA
+#-------------------------------------------------------------------------------
+
+cd $WORKING_DIR
+
+mkdir 9-UMI-counts-by-sample/
+mkdir 9-UMI-counts-by-sample/file-lists-for-UMI-counting
+
+ls 7-aligned-reads-rmdup-split-bed-gencode/ | while read FILE; do
+    PCR_WELL=`basename $FILE .bed`
+    echo "$PCR_WELL"
+done \
+| split -l $BATCH_SIZE -d - 9-UMI-counts-by-sample/file-lists-for-UMI-counting/
+
+ls 9-UMI-counts-by-sample/file-lists-for-UMI-counting | while read BATCH; do
+    sbatch $SCRIPTS_DIR/9-count-UMI-per-sample.sh    \
+        $WORKING_DIR/5-aligned-reads-filtered-sorted              \
+        $WORKING_DIR/7-aligned-reads-rmdup-split-bed              \
+        $WORKING_DIR/9-UMI-counts-by-sample/file-lists-for-UMI-counting/$BATCH         \
+        $WORKING_DIR/9-UMI-counts-by-sample                       \
+        $BIN                                                      \
+        $DATAMASH_PATH
+done
+
+#-------------------------------------------------------------------------------
+cd $WORKING_DIR
+mkdir 11-final-output
+
+cat 9-UMI-counts-by-sample/*.UMI.count | sort -k1,1 \
+| $DATAMASH_PATH -g 1 sum 2 \
+>11-final-output/total.UMI.count.by.sample
+
+cat 9-UMI-counts-by-sample/*.read.count | sort -k1,1 \
+| $DATAMASH_PATH -g 1 sum 2 \
+>11-final-output/total.read.count.by.sample
+
+
+cat 6-rRNA-read-counts/* | sort -k1,1 | $DATAMASH_PATH -g 1 sum 2 sum 3 \
+| join - 11-final-output/total.UMI.count.by.sample \
+| join - 11-final-output/total.read.count.by.sample \
+| awk 'BEGIN {
+    printf "%-18s    %11s    %8s    %10s    %8s\n",
+        "sample", "n.reads", "pct.rRNA", "n.UMI", "dup.rate";
+} {
+    printf "%-18s    %11d    %7.1f%%    %10d    %7.1f%%\n",
+        $1, $3, 100 * $2/$3, $4, 100 * (1 - $4/$5);
+}' \
+>11-final-output/rRNA.and.dup.rate.stats
+
+cat 11-final-output/rRNA.and.dup.rate.stats
+
+#-------------------------------------------------------------------------------
+# Make the final UMI count matrix
+#-------------------------------------------------------------------------------
+cd $WORKING_DIR
+
+cp $GENE_MODEL_DIR/latest.gene.annotations 11-final-output/gene.annotations
+
+mkdir 10-UMI-count-rollup
+mkdir 10-UMI-count-rollup/file-lists-for-UMI-count-rollup
+
+ls 8-unique-read-to-gene-assignments/ | grep -v file-lists | split -l $BATCH_SIZE -d - 10-UMI-count-rollup/file-lists-for-UMI-count-rollup/
+
+ls 10-UMI-count-rollup/file-lists-for-UMI-count-rollup | while read BATCH; do
+    sbatch $SCRIPTS_DIR/10-UMI-count-rollup.sh        \
+        $WORKING_DIR/8-unique-read-to-gene-assignments            \
+        $WORKING_DIR/10-UMI-count-rollup/file-lists-for-UMI-count-rollup/$BATCH     \
+        $WORKING_DIR/10-UMI-count-rollup              \
+        $DATAMASH_PATH
+done
+
+
+ 
+#-------------------------------------------------------------------------------
+cd $WORKING_DIR
+
+cat 10-UMI-count-rollup/* | gzip >prelim.UMI.count.rollup.gz
+
+#
+# Make samples.to.exclude file.
+# Each line lists a sample name to exclude.
+# You can leave it empty.
+#
+
+touch samples.to.exclude
+
+#
+# This uses the UMI_PER_CELL_CUTOFF variable
+# defined in the knee plot section.
+#
+
+UMI_PER_CELL_CUTOFF=0
+echo "UMI_PER_CELL_CUTOFF = $UMI_PER_CELL_CUTOFF"
+
+gunzip < prelim.UMI.count.rollup.gz \
+| $DATAMASH_PATH -g 1 sum 3 \
+| tr '|' '\t' \
+| awk -v CUTOFF=$UMI_PER_CELL_CUTOFF '
+    ARGIND == 1 {
+        exclude[$1] = 1;
+    } $3 >= CUTOFF && !($1 in exclude) {
+        print $2 "\t" $1; 
+    }' samples.to.exclude - \
+| sort -k1,1 -S 4G \
+>11-final-output/cell.annotations
+
+gunzip < prelim.UMI.count.rollup.gz \
+| tr '|' '\t' \
+| awk '{
+    if (ARGIND == 1) {
+        gene_idx[$1] = FNR;
+    } else if (ARGIND == 2) {
+        cell_idx[$1] = FNR;
+    } else if ($2 in cell_idx) {
+        printf "%d\t%d\t%d\n",
+            gene_idx[$3], cell_idx[$2], $4;
+    }
+}' 11-final-output/gene.annotations 11-final-output/cell.annotations - \
+>11-final-output/UMI.count.matrix
+
+# To create a cds object without cell line annotation and without hash
+
+module load R/4.1.0
+module load gdal
+module load geos
+
+Rscript $SCRIPTS_DIR/11-makeCDS.R \
+        $WORKING_DIR/11-final-output/UMI.count.matrix \
+        $WORKING_DIR/11-final-output/gene.annotations \
+        $WORKING_DIR/11-final-output/cell.annotations \
+        $WORKING_DIR/11-final-output
+
+
+#-------------------------------------------------------------------------------
+# Parse hash barcodes
+#-------------------------------------------------------------------------------
+
+HASH_BARCODES_FILE=$WORKING_DIR/hashSampleSheet.txt
+
+### Update sample name (to match corresponding sample name from cDNA demultiplexing)
+SAMPLE_NAME="sciPlex"
+
+BATCH_SIZE=10
+
+mkdir $WORKING_DIR/batch-logs/hash
+cd $WORKING_DIR
+
+mkdir hash
+mkdir hash/hashed-fastq
+
+ls 3-trimmed-fastq/file-lists-for-trimming | while read BATCH; do
+    sbatch $SCRIPTS_DIR/parse_hash.sh \
+        $WORKING_DIR/2-combined-fastq                            \
+        $WORKING_DIR/3-trimmed-fastq/file-lists-for-trimming/$BATCH             \
+        $SCRIPTS_DIR/                                           \
+        $HASH_BARCODES_FILE                                     \
+        $WORKING_DIR/combinatorial.indexing.key                 \
+        $WORKING_DIR/hash/hashed-fastq
+done
+
+
+#-------------------------------------------------------------------------------
+# Finish parse hash barcodes
+#-------------------------------------------------------------------------------
+cd $WORKING_DIR
+mkdir $WORKING_DIR/hash/hash-final
+
+zcat hash/hashed-fastq/*.gz \
+    | $DATAMASH_PATH -g 2,3,4 count 3 \
+    | $DATAMASH_PATH -g 1 sum 4 \
+    | awk -v S=$SAMPLE_NAME '{OFS="\t";} {print S, $0}' \
+    > $WORKING_DIR/hash/hash-final/hashReads.per.cell
+
+
+zcat hash/hashed-fastq/*.gz \
+    | uniq \
+    | $DATAMASH_PATH -g 2,3,4 count 3 \
+    | $DATAMASH_PATH -g 1 sum 4 \
+    | awk -v S=$SAMPLE_NAME '{OFS="\t";} {print S, $0}' \
+    > $WORKING_DIR/hash/hash-final/hashUMIs.per.cell
+
+
+zcat hash/hashed-fastq/*.gz \
+    | uniq \
+    | $DATAMASH_PATH -g 1,2,4 count 3  \
+    > $WORKING_DIR/hash/hash-final/hashTable.out 
+
+
+paste $WORKING_DIR/hash/hash-final/hashUMIs.per.cell  $WORKING_DIR/hash/hash-final/hashReads.per.cell \
+     | cut -f 1,2,6,3 \
+     | awk 'BEGIN {OFS="\t";} {dup = 1-($3/$4); print $1,$2,$3,$4,dup;}' \
+     > $WORKING_DIR/hash/hash-final/hashDupRate.txt
+
+
+## AT THIS POINT: Can download files at this point and add hash information (metadata) to cds custom/manually. Pipeline was written to add drug hash information in a very specific manner
+
+#-------------------------------------------------------------------------------
+# Add hash information to CDS
+#-------------------------------------------------------------------------------
+# It might make more sense to combine hash information to cds in own way
+# If so, download pre-hash cds and hashTable.out locally and add hash information in R
+# Based on how experiment was designed, cell lines are separated based on RT barcode plating
+
+# you will need a cell line map of a .csv file where the first 
+# column is the RT well location, the second column is the RT oligo barcode in the well,
+# and the third column is the cell line name (include column names)
+# e.g. Well Position	Barcode	Cell Line
+#      A1	TCCTACCAGT	A172
+#      A2	GCGTTGGAGC	A172
+#      A3	GATCTTACGC	A172
+#      A4	CTGATGGTCA	A172
+#      A5	CCGAGAATCC	U87MG
+#      A6	GCCGCAACGA	U87MG
+#      A7	TGAGTCTGGC	U87MG
+#      A8	TGCGGACCTA	U87MG
+#      A9	ACGGAGGCGG	T98G
+#      A10	TAGATCTACT	T98G
+#      A11	AATTAAGACT	T98G
+#      A12	TTATTCATTC	T98G
+
+CELL_LINE_MAP="CellLine_RT_Map.csv"
+
+module load R/4.1.0
+module load gdal
+module load geos
+
+Rscript $SCRIPTS_DIR/12-hashCDS.R                             \
+        $WORKING_DIR/11-final-output/cds_precell_prehash.RDS  \
+        $WORKING_DIR/$CELL_LINE_MAP                           \
+        $RT_BARCODES_FILE                                     \
+        $WORKING_DIR/hash/hash-final/hashTable.out            \
+        $WORKING_DIR/11-final-output
+
+
+
