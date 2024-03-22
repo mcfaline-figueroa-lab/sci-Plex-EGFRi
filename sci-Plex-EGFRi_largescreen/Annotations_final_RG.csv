@@ -1,0 +1,75 @@
+﻿name,drug,generation,class,reversible,target_amino_acid_or_binding_site,specificity,EGFR_IC50,class_broad,FDA_approved,specificity_RG
+(-)-Epigallocatechin Gallate,Epigallocatechin-Gallate,NA,Flavanol,,lipid_rafts,telomerase_DNMT_HER2_[NS]EGFR_FASN,,naturally-derived,,TERT_DNMT_HER2
+AC480 (BMS-599626),AC480,,indazole,Yes,ATP,[NS]EGFR_HER2_HER3,22,indole,,HER2_HER3_HER4
+AEE788 (NVP-AEE788),AEE788,,pyrrolopyrimidine,Yes,ATP,[NS]EGFR_HER2/ErbB2,2,pyrimidine,,HER2
+Afatinib (BIBW2992),Afatinib,2,anilinoquinazoline,No,cys-res,EGFR(L858R)_EGFR(wt)_ErbB4_EGFR(L858R/T790M)_HER2,0.5,quinazoline,Yes,HER2_HER4
+AG 494,AG494,1,tyrphostin,Yes,ATP,[NS]EGFR,1200,tyrphostin,,
+AG 555,AG555,,tyrphostin,Yes,topoisomerase I,[NS]EGFR,700,tyrphostin,,
+AG-1478 (tyrphostin AG-1478),AG-1478,2,aniloquinazoline,Yes,ATP,[NS]EGFR,3,quinazoline,,
+AG-1557,AG-1557,,tyrphostin_quinazoline,Yes,,[NS]EGFR,,tyrphostin,,
+AG-18,AG-18,,tyrphostin,Yes,,[NS]EGFR,35000,tyrphostin,,
+AG-490 (tyrphostin B42),AG-490,NA,tyrphostin,Yes,,JAK2(V617F)_[NS]EGFR,100,tyrphostin,,JAK
+AG99,AG99,,tyrphostin,Yes,,[NS]EGFR,,tyrphostin,,
+Alflutinib (AST2818) mesylate,Alflutinib,3,pyridine,No,cys797,"CYP3A4, G719X, exon 19 deletion, L858R, L861Q, and T790M",,pyridine,,
+Allitinib tosylate,Allitinib,,quinazoline,No,cys797_cys805,EGFR(T790M)_EGFR(L858R),12,quinazoline,,
+AP26113-analog (ALK-IN-1),AP26113-analog,3,pyrimidine,Yes,ATP,EGFR(C797S/T790M/del19),,pyrimidine,,ALK
+Avitinib (AC0010),Avitinib,3,pyrrolopyrimidine,No,cys797,EGFR(L858R/T790M),7.68,pyrimidine,,
+AZ5104,AZ5104,,,No,metabolite of AZD9291,EGFR(L858R/T790M)_EGFR(L858R)_EGFR (L861Q)_EGFR (WT),25,pyrimidine,,
+AZD3759,AZD3759,,Quinazolinamine,No,ATP,EGFR(WT)_EGFR(L858R)_EGFR(ex19Del),0.3,quinazolinamine,,
+BDTX-189,BDTX-189,3,pyrimidine,No,ATP,EGFR(ex20ins)_HER2_RIPK2_BLK,0.2,pyrimidine,,HER2
+Brigatinib (AP26113),Brigatinib,3,pyrimidine,Yes,ATP,ALK_ROS1_FLT3_IGF1R_EGFR(C797S/del19)_EGFR(del19)_EGFR(C797S/T790M/del19)_EGFR(T790M/del19)_InsR,,pyrimidine,Yes,ALK
+Butein,Butein,,chalcone,,NF-Œ∫B and STAT3,[NS]EGFR,65000,naturally-derived,,PTK
+Chrysophanic Acid,ChrysophanicAcid,NA,anthraquinone,,,[NS]EGFR_mTOR,,naturally-derived,,mTOR
+CL-387785 (EKI-785),CL-387785,,quinazoline,No,ATP,[NS]EGFR,0.37,quinazoline,,
+CNX-2006,CNX-2006,,,No,similar to CO-1686?,EGFR(L858R)_EGFR(T790M),<20,pyrimidine,,
+CP-724714,CP-724714,NA,quinazolinamine,Yes,ATP,HER2,10,quinazolinamine,,HER2
+CUDC-101,CUDC-101,NA,quinazolinamine,Yes,ATP,[NS]EGFR_HDAC_HDAC1_HDAC6_HDAC3_HDAC5_HDAC2_HDAC4_HER2_HDAC10_HDAC9_HDAC8_HDAC7,2.4,quinazolinamine,,HDAC
+Cyasterone,Cyasterone,,steroid lactone,,,A549_MGC823,,naturally-derived,,
+"Dacomitinib (PF299804, PF299)",Dacomitinib,2,quinazalone,No,cys797,[NS]EGFR_ErbB2_ErbB4_EGFR(T790M),6,quinazoline,Yes,HER2_HER3_HER4
+Daphnetin,Daphnetin,,coumarin,,ATP,[NS]EGFR_PKA_PKC,7670,naturally-derived,,PKA_PKC
+DZD9008,DZD9008,,,No,cys797,EGFR(ex20ins),1.25,pyrimidine,Yes,
+EAI045,EAI045,4,,Yes,Allosteric,EGFR(L858R/T790M) EGFR(C797S),,acetamide,,
+EBE-A22,EBE-A22,,quinazoline,Yes,,[NS]EGFR,,quinazoline,,
+EGFR Inhibitor,EGFRInhibitor,,pyrimidine,No,H-bondT776,[NS]EGFR,21,pyrimidine,,
+Gefitinib (ZD1839),Gefitinib,1,quinazolinamine,Yes,ATP,[NS]EGFR,37,quinazolinamine,Yes,
+Geftinib-based PROTAC3,Gefitinib-PROTAC3,,quinazolinamine,Yes,,EGFR(Ex19del)_EGFR(L858R),,PROTAC,,
+Genistein,Genistein,,Isoflavone,Yes,ATP,[NS]EGFR_topo2,12000,naturally-derived,,PTK
+HER2-Inhibitor-1,HER2-Inhibitor-1,,,Yes,,HER2,,quinazolinamine,,HER2
+HS-10296,HS-10296,3,pyrimidine,No,cys797,EGFR(T790M),,pyrimidine,,
+Ibrutinib (PCI-32765),Ibrutinib,3,pyrimidine,No,cys797,BTK_BLK_Bmx_CSK_FGR_BRK_Hck_[NS]EGFR_YES_HER2_ITK_JAK3_FRK_LCK_RET,5.6,pyrimidine,Yes,BTK
+Icotinib,Icotinib,,quinazolinamine,Yes,ATP,EGFR(L858R)_EGFR(L861Q)_EGFR(T790M)_EGFR(T790M_L858R),5,quinazolinamine,,
+"Irbinitinib (ARRY-380, ONT-380)",Irbinitinib,,quinazolinamine,Yes,ATP,p95HER2_HER2,,quinazolinamine,Yes,HER2
+JBJ-04-125-02,JBJ-04-125-02,4,isoindolinone,Yes,Allosteric,EGFR(L858R/T790M/C797S),,indole,,
+Lapatinib,Lapatinib,1,quinazoline        ,Yes,ATP,HER2_[NS]EGFR_ErbB4,10.8,quinazoline        ,Yes,HER2
+Lidocaine hydrochloride,Lidocaine,,m-xylene,,,[NS]EGFR,,aminoethylamide,Yes,
+Lifirafenib (BGB-283),Lifirafenib,,tricyclic benzoimidazole,Yes,ATP-BRAF,EGFR[NS]_EGFR(T790M/L858R)_B-RAFV600E_A-RAF(WT)_B-RAF(WT)_C-RAF(WT),29,benzoimidazole,,RAF
+Mobocertinib (TAK788),Mobocertinib,3,pyrimidine,No,cys797,EGFR(ex20ins),,pyrimidine,Yes,HER2
+MTX-211,MTX-211,,sulfanomide,,,PI3K_[NS]EGFR,,sulfanomide,,PI3K
+Naquotinib (ASP8273),Naquotinib,3,aminopyrazine,No,cys797,EGFR(L858R)_EGFR(ex19del)_EGFR(L858R/T790M)_EGFR(ex19del/T790M),230,aminopyrazine,,
+"Nazartinib (EGF816, NVS-816)",Nazartinib,3,aminobenzimidazole,No,cys797,EGFR(L858R)_EGFR(ex19del)_EGFR(T790M),31,aminobenzimidazole,,
+Neratinib (HKI-272),Neratinib,2,quinoline,No,cys797,HER2_[NS]EGFR,92,quinoline,Yes,HER2
+Norcantharidin,Norcantharidin,,dicarboxylic acid,,,c-Met_[NS]EGFR,,dicarboxylic acid,,MET
+NSC228155,NSC228155,,,,"sEGFR dimerization domain II, modulates EGFR tyrosine phosphorylation",[NS]EGFR_KIX-KIDinteraction,,EGFR-activator,,
+"Olmutinib (HM61713, BI 1482694)",Olmutinib,3,pyrimidine,No,,EGFR(L858R/T790M)_EGFR(ex19del),2225,pyrimidine,,BTK
+OSI-420 ,OSI-420 ,1,quinazoline,Yes,,EGFR(WT),2,quinazoline,,
+Osimertinib (AZD9291),Osimertinib,3,pyrimidine,No,cys797,EGFR(exon_19Del)_EGFR(L858R/T790M)_EGFR(WT),,pyrimidine,Yes,
+Panitumumab (anti-EGFR),Panitumumab,,monoclonal-antibody,,,[NS]EGFR,,monoclonal antibody,Yes,
+PD153035,PD153035,,quinazoline,Yes,ATP,[NS]EGFR,0.0052,quinazoline,,
+PD168393,PD168393,,quinazolinamine,No,ATP,[NS]EGFR,0.7,quinazolinamine,,
+Pelitinib (EKB-569),Pelitinib,2,aminoquinoline,No,Allosteric,EGFR(T790M)_Src_MEK/ERK_HER2_Raf,38.5,quinoline,,SRC
+Poziotinib (HM781-36B),Poziotinib,,quinazolinamine,No,ATP,[NS]EGFR_HER2_HER3,3.2,quinazolinamine,,HER2_HER3
+Puromycin,Puromycin,,aminonucleoside-antibiotic,,,,,aminonucleoside,,
+RG 13022,RG13022,,tyrphostin,Yes,,[NS]EGFR,,tyrphostin,,
+"Rociletinib (CO-1686, AVL-301)",Rociletinib,3,pyrimidine,No,ATP,EGFR(L858R)_EGFR(T790M)_EGFR(WT),62-187,pyrimidine,,
+Sapitinib (AZD8931),Sapitinib,,quinazoline        ,Yes,ATP,ErbB_[NS]EGFR_ErbB3,4,quinazoline        ,,HER3
+Saracatinib (AZD0530),Saracatinib,,anilinoquinazoline,Yes,ATP,EGFR(L858R)_EGFR(L861Q),4,quinazoline,Yes,SRC_ABL
+SU5214,SU5214,,Indolinone,No,"H-bondCNT(6,6-6)",VEGFR2_[NS]EGFR,367,indole,,VEGFR
+TAK-285,TAK-285,,pyrimidine,Yes,ATP,HER2_[NS]EGFR_HER4_MEK1_AuroraB_LCK,23,pyrimidine,,HER2
+TAS6417,TAS6417,,indolizine,No,cys797,EGFR(d746-750/T790M)_EGFR(d746-750)_EGFR T790M/L858R_EGFR (T790M)_EGFR (L861Q)_EGFR(WT)_TXK_BMX_HER4,50.8,indole,,
+tyrphostin 9,Tyrphostin9,,tyrphostin,Yes,,PDGFR_[NS]EGFR,460000,tyrphostin,,PDGFR
+tyrphostin AG-528,TyrphostinAG-528,,tyrphostin,Yes,"H-bondCNT(6,6-6)",HER2_[NS]EGFR ,490,tyrphostin,,HER2_HER3
+Varlitinib,Varlitinib,,quinazolinamine,Yes,ATP,ErbB2_[NS]EGFR,7,quinazolinamine,,HER2
+WHI-P154,WHI-P154,,quinazoline,Yes,ATP,[NS]EGFR_VEGFR_Src_JAK3,4,quinazoline,,JAK
+WZ3146,WZ3146,3,pyrimidine,No,cys797,EGFR(L858R)_EGFR(E746_A750),,pyrimidine,,
+WZ4002,WZ4002,3,pyrimidine,No,cys797,EGFR(L858R)_EGFR(T790M),,pyrimidine,,
+WZ8040,WZ8040,3,pyrimidine,No,cys797,EGFR(T790M),1820,pyrimidine,,
