@@ -1,6 +1,6 @@
 # sci-Plex-EGFRi
 
-[sci-Plex-EGFRi](https://www.biorxiv.org/content/10.1101/2024.04.08.587960v1) is a study to elucidate the heterogenous pharmaco-transcriptomic landscape induced by targeting EGFR in models of glioblastoma. This github repository containing processing pipelines and analysis scripts, including files used for data generation, analysis and interpretation.
+[sci-Plex-EGFRi](https://www.biorxiv.org/content/10.1101/2024.04.08.587960v2) is a study to elucidate the heterogenous pharmaco-transcriptomic landscape induced by targeting EGFR in models of glioblastoma. This github repository containing processing pipelines and analysis scripts, including files used for data generation, analysis and interpretation.
 
 ### Contents
 
